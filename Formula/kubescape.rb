@@ -17,6 +17,7 @@ class Kubescape < Formula
 
   depends_on "cmake" => :build
   depends_on "go" => :build
+  depends_on "pkg-config" => :build
 
   resource "git2go" do
     url "https://github.com/libgit2/git2go/archive/refs/tags/v33.0.9.tar.gz"
