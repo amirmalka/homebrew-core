@@ -18,12 +18,25 @@ class Kubescape < Formula
   depends_on "go" => :build
   depends_on "cmake" => :build
 
+  resource "git2go" do
+    url "https://github.com/libgit2/git2go/archive/refs/tags/v33.0.9.tar.gz"
+    sha256 "bcdaa5ed86d7ad513f51cdd80006a23a7fa9d9e68db06b3ce39a25a4196e4d67"
+  end
+
+  resource "libgit2" do
+    url "https://github.com/libgit2/libgit2/archive/refs/tags/v1.3.0.tar.gz"
+    sha256 "192eeff84596ff09efb6b01835a066f2df7cd7985e0991c79595688e6b36444e"
+  end
+
   def install
+    resource("git2go").stage(buildpath/"git2go") 
+    resource("libgit2").stage(buildpath/"git2go/vendor/libgit2") 
+
+    ENV["CGO_ENABLED"] = "1"
     ldflags = %W[
       -s -w
       -X github.com/armosec/kubescape/v2/core/cautils.BuildNumber=v#{version}
     ]
-    ENV["CGO_ENABLED"] = "1"
 
     system "make", "libgit2"
     system "go", "build", "-tags=static", *std_go_args(ldflags: ldflags)
