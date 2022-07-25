@@ -1,8 +1,8 @@
 class Kubescape < Formula
   desc "Kubernetes testing according to Hardening Guidance by NSA and CISA"
   homepage "https://github.com/armosec/kubescape"
-  url "https://github.com/armosec/kubescape/archive/v2.0.161.tar.gz"
-  sha256 "165222d24db46b70a664fd70e8918f478c39c05ef30bbcbfb57c05307d88ce6a"
+  url "https://github.com/armosec/kubescape/archive/v2.0.164.tar.gz"
+  sha256 "331f38cc0868737439b409ad73ce34274fc7542b7699ca44a11f6447db15acbb"
   license "Apache-2.0"
   head "https://github.com/armosec/kubescape.git", branch: "master"
 
@@ -15,15 +15,33 @@ class Kubescape < Formula
     sha256 cellar: :any_skip_relocation, x86_64_linux:   "a8f380152c0c592450d46da3f3731853a452de6fe0a2fe824212465711ff6a9d"
   end
 
+  depends_on "cmake" => :build
   depends_on "go" => :build
 
+  resource "git2go" do
+    url "https://github.com/libgit2/git2go/archive/refs/tags/v33.0.9.tar.gz"
+    sha256 "bcdaa5ed86d7ad513f51cdd80006a23a7fa9d9e68db06b3ce39a25a4196e4d67"
+  end
+
+  resource "libgit2" do
+    url "https://github.com/libgit2/libgit2/archive/refs/tags/v1.3.0.tar.gz"
+    sha256 "192eeff84596ff09efb6b01835a066f2df7cd7985e0991c79595688e6b36444e"
+  end
+
   def install
+    resource("git2go").stage(buildpath/"git2go")
+    resource("libgit2").stage(buildpath/"git2go/vendor/libgit2")
+
+    ENV["CGO_ENABLED"] = "1"
+    ENV["GOCACHE"] = buildpath/"cache"
+
     ldflags = %W[
       -s -w
       -X github.com/armosec/kubescape/v2/core/cautils.BuildNumber=v#{version}
     ]
 
-    system "go", "build", *std_go_args(ldflags: ldflags)
+    system "make", "libgit2"
+    system "go", "build", *std_go_args(ldflags: ldflags), "-tags", "static"
 
     output = Utils.safe_popen_read(bin/"kubescape", "completion", "bash")
     (bash_completion/"kubescape").write output
