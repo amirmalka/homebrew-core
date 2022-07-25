@@ -1,8 +1,8 @@
 class Kubescape < Formula
   desc "Kubernetes testing according to Hardening Guidance by NSA and CISA"
   homepage "https://github.com/armosec/kubescape"
-  url "https://github.com/armosec/kubescape/archive/v2.0.161.tar.gz"
-  sha256 "165222d24db46b70a664fd70e8918f478c39c05ef30bbcbfb57c05307d88ce6a"
+  url "https://github.com/armosec/kubescape/archive/v2.0.163.tar.gz"
+  sha256 "853a1fcdb7da0975259ee9fae794e997a92988e0bf9cb5ef18d236457d0693cd"
   license "Apache-2.0"
   head "https://github.com/armosec/kubescape.git", branch: "master"
 
@@ -16,14 +16,17 @@ class Kubescape < Formula
   end
 
   depends_on "go" => :build
+  depends_on "cmake" => :build
 
   def install
     ldflags = %W[
       -s -w
       -X github.com/armosec/kubescape/v2/core/cautils.BuildNumber=v#{version}
     ]
+    ENV["CGO_ENABLED"] = "1"
 
-    system "go", "build", *std_go_args(ldflags: ldflags)
+    system "make", "libgit2"
+    system "go", "build", "-tags=static", *std_go_args(ldflags: ldflags)
 
     output = Utils.safe_popen_read(bin/"kubescape", "completion", "bash")
     (bash_completion/"kubescape").write output
